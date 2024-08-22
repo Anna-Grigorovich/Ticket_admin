@@ -1,0 +1,11 @@
+.header {
+  background-color: rgb(138, 130, 44);
+}
+.headerWrap {
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  /* height: 80px; */
+}
