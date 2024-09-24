@@ -47,7 +47,13 @@ const NavigationDrawer = ({ open, toggleDrawer }) => {
           </ListItemIcon>
           <ListItemText primary="Події" />
         </ListItem>
-        <ListItem button onClick={() => handleListItemClick('/event/:id')}>
+        {/* <ListItem button onClick={() => handleListItemClick('/event/:id')}>
+          <ListItemIcon>
+            <ShoppingCartIcon />
+          </ListItemIcon>
+          <ListItemText primary="Касса" onClick={() => handleListItemClick('/cash')}  />
+        </ListItem> */}
+        <ListItem button onClick={() => handleListItemClick('/cash')}>
           <ListItemIcon>
             <ShoppingCartIcon />
           </ListItemIcon>
