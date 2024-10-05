@@ -8,6 +8,7 @@ import EventDetail from './components/EventDetail/EventDetail';
 import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
 import { useState } from 'react';
 import Cash from './components/Cash/Cash';
+import LoginPage from './page/Login/Login';
 
 function App() {
   const [open, setOpen] = useState(false);
@@ -113,6 +114,7 @@ function App() {
       <Header toggleDrawer={toggleDrawer} />
       <main>
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/event/:id" element={<EventDetail />} />
