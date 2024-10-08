@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
-import { useDispatch } from 'react-redux';
-import { logIn } from '../../redux/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+// import { logIn } from '../../redux/authSlice';
+import { logInUser } from '../../redux/authSlice'; // Импортируем асинхронный экшен
+
 import { useNavigate } from 'react-router-dom';
 
 export const LoginForm = () => {
@@ -9,13 +11,21 @@ export const LoginForm = () => {
   const [password, setPassword] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isFetchingCurrentUser, error } = useSelector((state) => state.auth);
+
   const handleLogin = (e) => {
     e.preventDefault();
-    dispatch(logIn(login));
-    console.log('Login:', login);
-    console.log('Password:', password);
-    navigate('/', { replace: true });
+    dispatch(logInUser({ login, password }))
+      .unwrap()
+      .then(() => {
+        // Если логин успешен, перенаправляем пользователя
+        navigate('/', { replace: true });
+      })
+      .catch((err) => {
+        console.error('Ошибка логина:', err);
+      });
   };
+
   return (
     <Paper elevation={3} sx={{ padding: 4, marginTop: 8 }}>
       <Box display="flex" flexDirection="column" alignItems="center">
@@ -42,7 +52,7 @@ export const LoginForm = () => {
             label="Пароль"
             type="password"
             id="password"
-            autoComplete="current-password"
+            // autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
