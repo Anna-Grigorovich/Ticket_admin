@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CreateEventModal from '../../components/CreateEventModal/CreateEventModal';
 import { Button, Container } from '@mui/material';
 import EventsTable from '../../components/EventsTable/EventsTable';
+import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 import c from './Events.module.css';
 
 const Events = () => {
@@ -20,7 +21,7 @@ const Events = () => {
   ]);
 
   const [isModalOpen, setModalOpen] = useState(false);
-
+  useLogOutRedirect();
   const handleCreateEvent = (newEvent) => {
     setEvents([...events, newEvent]);
   };

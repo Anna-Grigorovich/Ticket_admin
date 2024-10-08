@@ -11,12 +11,13 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 
 const Cash = ({ events }) => {
   const [selectedEvent, setSelectedEvent] = useState('');
   const [barcode, setBarcode] = useState('');
   const [scanResult, setScanResult] = useState(null);
-
+  useLogOutRedirect();
   const handleEventChange = (event) => {
     setSelectedEvent(event.target.value);
   };

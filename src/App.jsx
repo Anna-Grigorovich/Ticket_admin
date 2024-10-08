@@ -1,5 +1,5 @@
 import './App.css';
-import { NavLink, Route, Router, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import Events from './page/Events/Events';
@@ -7,8 +7,9 @@ import Home from './page/Home/Home';
 import EventDetail from './components/EventDetail/EventDetail';
 import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
 import { useState } from 'react';
-import Cash from './components/Cash/Cash';
 import LoginPage from './page/Login/Login';
+import { useSelector } from 'react-redux';
+import Cash from './page/Cash/Cash';
 
 function App() {
   const [open, setOpen] = useState(false);
@@ -108,9 +109,13 @@ function App() {
       image: 'event.jpg',
     },
   ];
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+  console.log(isLoggedIn);
   return (
     <div className="app">
-      <NavigationDrawer open={open} toggleDrawer={toggleDrawer} />
+      {isLoggedIn && (
+        <NavigationDrawer open={open} toggleDrawer={toggleDrawer} />
+      )}
       <Header toggleDrawer={toggleDrawer} />
       <main>
         <Routes>

@@ -12,7 +12,7 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
-
+import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 const Home = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +22,7 @@ const Home = () => {
     { id: 2, name: 'Jane Smith', role: 'Cashier' },
     { id: 3, name: 'Tom Brown', role: 'Manager' },
   ]);
-
+  useLogOutRedirect();
   const handleRegister = () => {
     if (username && password && role) {
       const newUser = {
@@ -37,7 +37,6 @@ const Home = () => {
       setRole('');
     }
   };
-
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h4" gutterBottom>
