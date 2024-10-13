@@ -3,11 +3,11 @@ import axios from 'axios';
 
 const initialState = {
   user: { name: null, email: null },
-  token: null,
-  login: '',
-  isLoggedIn: false,
+  token: localStorage.getItem('token') || null, // Восстанавливаем токен из localStorage
+  login: localStorage.getItem('login') || '', // Восстанавливаем логин из localStorage
+  isLoggedIn: !!localStorage.getItem('token'), // Если токен есть, пользователь залогинен
   isFetchingCurrentUser: false,
-  error: null, // Добавляем состояние для ошибок
+  error: null, // Состояние для ошибок
 };
 
 // Асинхронный экшен для логина
@@ -19,7 +19,8 @@ export const logInUser = createAsyncThunk(
         login,
         password,
       });
-      return { token: response.data.token, login }; // Возвращаем токен и логин
+      console.log(response);
+      return { token: response.data, login }; // Предполагаем, что сервер возвращает { token: 'your-token' }
     } catch (error) {
       return rejectWithValue(error.response.data); // Возвращаем ошибку, если запрос не удался
     }
@@ -34,6 +35,8 @@ export const authSlice = createSlice({
       state.login = '';
       state.token = null;
       state.isLoggedIn = false;
+      localStorage.removeItem('token'); // Удаляем токен из localStorage при выходе
+      localStorage.removeItem('login'); // Удаляем логин из localStorage
     },
   },
   extraReducers: (builder) => {
@@ -44,10 +47,14 @@ export const authSlice = createSlice({
       })
       .addCase(logInUser.fulfilled, (state, action) => {
         // Сохраняем токен и логин пользователя после успешного логина
-        state.token = action.payload.token; // Сохраняем токен
-        state.login = action.payload.login; // Сохраняем логин, переданный в запросе
+        state.token = action.payload.token; // Сохраняем токен в Redux
+        state.login = action.payload.login; // Сохраняем логин
         state.isLoggedIn = true;
         state.isFetchingCurrentUser = false;
+
+        // Сохраняем токен и логин в localStorage
+        localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('login', action.payload.login);
       })
       .addCase(logInUser.rejected, (state, action) => {
         state.error = action.payload || 'Ошибка авторизации';

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
   TextField,
   Button,
@@ -13,30 +14,72 @@ import {
   ListItemText,
 } from '@mui/material';
 import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
+
 const Home = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('');
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', role: 'Manager' },
-    { id: 2, name: 'Jane Smith', role: 'Cashier' },
-    { id: 3, name: 'Tom Brown', role: 'Manager' },
-  ]);
-  useLogOutRedirect();
-  const handleRegister = () => {
-    if (username && password && role) {
-      const newUser = {
-        id: users.length + 1,
-        name: username,
-        password: password, // Store the password (for demonstration purposes only)
-        role: role,
-      };
-      setUsers([...users, newUser]);
-      setUsername('');
-      setPassword('');
-      setRole('');
+  const [users, setUsers] = useState([]);
+
+  useLogOutRedirect(); // Если нужно перенаправить неавторизованного пользователя
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:3300/users', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Response data:', response.data); // Проверь, что здесь массив
+      setUsers(response.data.users);
+    } catch (error) {
+      console.error('Ошибка при получении пользователей:', error);
     }
   };
+
+  // Вызов fetchUsers при монтировании компонента
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleRegister = async () => {
+    if (username && password && role) {
+      try {
+        // Достаём токен администратора из localStorage или redux
+        const token = localStorage.getItem('token');
+        console.log(token);
+        // Формируем объект с данными нового пользователя
+        const newUser = {
+          login: username,
+          password: password,
+          role: role,
+        };
+
+        // Отправляем запрос на сервер
+        const response = await axios.post(
+          'http://localhost:3300/users', // Это адрес твоего эндпоинта
+          newUser,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Передаём токен администратора
+            },
+          },
+        );
+
+        // Если регистрация успешна, добавляем нового пользователя в список
+        setUsers([...users, { id: users.length + 1, name: username, role }]);
+        setUsername('');
+        setPassword('');
+        setRole('');
+      } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        alert('Не удалось зарегистрировать пользователя. Проверьте данные.');
+      }
+    }
+  };
+
   return (
     <Box sx={{ p: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -66,8 +109,9 @@ const Home = () => {
             onChange={(e) => setRole(e.target.value)}
             fullWidth
           >
-            <MenuItem value="Manager">Менеджер</MenuItem>
-            <MenuItem value="Cashier">Касир</MenuItem>
+            <MenuItem value="manager">Менеджер</MenuItem>
+            <MenuItem value="seller">Касир</MenuItem>
+            <MenuItem value="admin">Адмін</MenuItem>
           </Select>
         </FormControl>
         <Button variant="contained" color="primary" onClick={handleRegister}>
@@ -81,7 +125,7 @@ const Home = () => {
       <List>
         {users.map((user) => (
           <ListItem key={user.id}>
-            <ListItemText primary={user.name} secondary={user.role} />
+            <ListItemText primary={user.login} secondary={user.role} />
           </ListItem>
         ))}
       </List>
