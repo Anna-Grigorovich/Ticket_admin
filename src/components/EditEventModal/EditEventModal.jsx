@@ -10,50 +10,47 @@ import {
 } from '@mui/material';
 
 const EditEventModal = ({ open, onClose, eventData, onSave }) => {
-  const [title, setTitle] = useState(eventData.title || '');
-  const [description, setDescription] = useState(eventData.description || '');
-  const [date, setDate] = useState(eventData.date || '');
-  const [time, setTime] = useState(eventData.time || '');
-  const [price, setPrice] = useState(eventData.price || '');
-  const [place, setPlace] = useState(eventData.place || '');
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [price, setPrice] = useState('');
+  const [place, setPlace] = useState('');
+  const [address, setAddress] = useState('');
 
+  // Когда модальное окно открывается, мы загружаем данные события для редактирования
   useEffect(() => {
-    setTitle(eventData.title || '');
-    setDescription(eventData.description || '');
-    setDate(eventData.date || '');
-    setTime(eventData.time || '');
-    setPrice(eventData.price || '');
-    setPlace(eventData.place || '');
-    setImage(eventData.image || null);
-    setImagePreview(null); // Сбросить превью при открытии модалки
+    if (eventData) {
+      setTitle(eventData.title);
+      setDescription(eventData.description);
+      setDate(new Date(eventData.date).toISOString().split('T')[0]); // Конвертация timestamp в формат даты
+      setTime(
+        new Date(eventData.date)
+          .toLocaleTimeString('en-US', { hour12: false })
+          .substring(0, 5),
+      );
+      setPrice(eventData.price);
+      setPlace(eventData.place);
+      setAddress(eventData.address);
+    }
   }, [eventData]);
 
   const handleSave = () => {
     const updatedEvent = {
-      ...eventData,
+      ...eventData, // Сохраняем _id и другие неизмененные поля
       title,
       description,
-      date,
-      time,
-      price: parseFloat(price),
-      image: image ? URL.createObjectURL(image) : eventData.image,
+      date: new Date(`${date}T${time}`).getTime(), // Преобразуем дату и время в timestamp
+      price: Number(price),
       place,
+      address,
     };
-    onSave(updatedEvent);
-    onClose();
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    setImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    onSave(updatedEvent); // Передаем обновленные данные события
   };
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>Змінити подію</DialogTitle>
+      <DialogTitle>Редактировать подію</DialogTitle>
       <DialogContent>
         <Grid container spacing={2}>
           <Grid item xs={12}>
@@ -68,11 +65,10 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
             <TextField
               fullWidth
               label="Опис"
+              multiline
+              rows={5}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              multiline
-              minRows={4}
-              inputProps={{ style: { fontSize: 16 } }}
             />
           </Grid>
           <Grid item xs={6}>
@@ -112,29 +108,18 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
               onChange={(e) => setPlace(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12}>
-            <Button variant="contained" component="label" fullWidth>
-              Змінити афішу
-              <input type="file" hidden onChange={handleImageChange} />
-            </Button>
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Прев'ю нової афіші"
-                style={{ marginTop: '10px', maxWidth: '100%', height: 'auto' }}
-              />
-            ) : (
-              <img
-                src={eventData.image}
-                alt="Поточна афіша"
-                style={{ marginTop: '10px', maxWidth: '100%', height: 'auto' }}
-              />
-            )}
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Адреса"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Закрити</Button>
+        <Button onClick={onClose}>Скасувати</Button>
         <Button onClick={handleSave} variant="contained">
           Зберегти
         </Button>

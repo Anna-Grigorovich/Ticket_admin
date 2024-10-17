@@ -20,7 +20,7 @@ export const logInUser = createAsyncThunk(
         password,
       });
       console.log(response);
-      return { token: response.data, login }; // Предполагаем, что сервер возвращает { token: 'your-token' }
+      return { token: response.data.access, login }; // Предполагаем, что сервер возвращает { token: 'your-token' }
     } catch (error) {
       return rejectWithValue(error.response.data); // Возвращаем ошибку, если запрос не удался
     }
