@@ -6,6 +6,7 @@ const initialState = {
   token: localStorage.getItem('token') || null, // Восстанавливаем токен из localStorage
   login: localStorage.getItem('login') || '', // Восстанавливаем логин из localStorage
   isLoggedIn: !!localStorage.getItem('token'), // Если токен есть, пользователь залогинен
+  role: localStorage.getItem('role') || '', // Восстанавливаем роль из localStorage
   isFetchingCurrentUser: false,
   error: null, // Состояние для ошибок
 };
@@ -20,7 +21,7 @@ export const logInUser = createAsyncThunk(
         password,
       });
       console.log(response);
-      return { token: response.data.access, login }; // Предполагаем, что сервер возвращает { token: 'your-token' }
+      return { token: response.data.access, login, role: response.data.role }; // Предполагаем, что сервер возвращает { token: 'your-token' }
     } catch (error) {
       return rejectWithValue(error.response.data); // Возвращаем ошибку, если запрос не удался
     }
@@ -37,6 +38,7 @@ export const authSlice = createSlice({
       state.isLoggedIn = false;
       localStorage.removeItem('token'); // Удаляем токен из localStorage при выходе
       localStorage.removeItem('login'); // Удаляем логин из localStorage
+      localStorage.removeItem('role'); // Удаляем роль из localStorage
     },
   },
   extraReducers: (builder) => {
@@ -49,12 +51,14 @@ export const authSlice = createSlice({
         // Сохраняем токен и логин пользователя после успешного логина
         state.token = action.payload.token; // Сохраняем токен в Redux
         state.login = action.payload.login; // Сохраняем логин
+        state.role = action.payload.role; // Сохраняем роль пользователя
         state.isLoggedIn = true;
         state.isFetchingCurrentUser = false;
 
         // Сохраняем токен и логин в localStorage
         localStorage.setItem('token', action.payload.token);
         localStorage.setItem('login', action.payload.login);
+        localStorage.setItem('role', action.payload.role); // Сохраняем роль в localStorage
       })
       .addCase(logInUser.rejected, (state, action) => {
         state.error = action.payload || 'Ошибка авторизации';
