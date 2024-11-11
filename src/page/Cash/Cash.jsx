@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   FormControl,
@@ -11,13 +11,30 @@ import {
   Box,
   Typography,
 } from '@mui/material';
+import axios from 'axios';
 import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 
-const Cash = ({ events }) => {
+const Cash = () => {
+  const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState('');
   const [barcode, setBarcode] = useState('');
   const [scanResult, setScanResult] = useState(null);
+
   useLogOutRedirect();
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get('http://localhost:3300/events'); // Получение событий с бэкенда
+        setEvents(response.data.events); // Обновление состояния с полученными событиями
+      } catch (error) {
+        console.error('Ошибка при получении ивентов:', error);
+      }
+    };
+
+    fetchEvents(); // Вызов функции для получения событий
+  }, []);
+
   const handleEventChange = (event) => {
     setSelectedEvent(event.target.value);
   };
@@ -26,15 +43,35 @@ const Cash = ({ events }) => {
     setBarcode(event.target.value);
   };
 
-  const checkTicket = () => {
-    console.log(
-      `Проверка билета для события: ${selectedEvent}, штрих-код: ${barcode}`,
-    );
+  const checkTicket = async () => {
+    console.log(`Проверка билета для события: ${selectedEvent}, штрих-код: ${barcode}`);
+  
+    try {
+      const token = localStorage.getItem('token'); // Предположим, что вы храните токен в localStorage
+  
+      const response = await axios.get(`http://localhost:3300/tickets/${selectedEvent}/${barcode}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Добавляем заголовок с токеном
+        },
+      });
+      setScanResult('valid'); // Если билет найден, устанавливаем статус
+    } catch (error) {
+      console.error('Ошибка при проверке билета:', error);
 
-    if (barcode === '12345') {
-      setScanResult('valid');
-    } else {
-      setScanResult('inHall');
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 404) {
+          setScanResult('notFound'); // Билет не найден
+        } else if (status === 400) {
+          setScanResult('wrongEvent'); // Билет не соответствует событию
+        } else if (status === 409) {
+          setScanResult('alreadyScanned'); // Билет уже отсканирован
+        } else if (status === 401) {
+          setScanResult('unauthorized'); // Ошибка аутентификации
+        }
+      } else {
+        setScanResult('error'); // Общая ошибка
+      }
     }
   };
 
@@ -58,7 +95,7 @@ const Cash = ({ events }) => {
             >
               {events.length > 0 ? (
                 events.map((event) => (
-                  <MenuItem key={event.id} value={event.id}>
+                  <MenuItem key={event._id} value={event._id}>
                     {`${event.title} - ${event.date}`}
                   </MenuItem>
                 ))
@@ -92,7 +129,11 @@ const Cash = ({ events }) => {
               backgroundColor:
                 scanResult === 'valid'
                   ? 'green'
-                  : scanResult === 'inHall'
+                  : scanResult === 'wrongEvent'
+                  ? 'blue'
+                  : scanResult === 'alreadyScanned'
+                  ? 'orange'
+                  : scanResult === 'notFound'
                   ? 'red'
                   : 'grey',
               textAlign: 'center',
@@ -105,8 +146,12 @@ const Cash = ({ events }) => {
             <Typography variant="h6" sx={{ color: 'white' }}>
               {scanResult === 'valid'
                 ? 'Прохід дозволено'
-                : scanResult === 'inHall'
-                ? 'Квиток в залі'
+                : scanResult === 'wrongEvent'
+                ? 'Билет не для этого события'
+                : scanResult === 'alreadyScanned'
+                ? 'Квиток уже отсканирован'
+                : scanResult === 'notFound'
+                ? 'Квиток не знайдено'
                 : 'Результат сканування відобразиться тут'}
             </Typography>
           </Box>

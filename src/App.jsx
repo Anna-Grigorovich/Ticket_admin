@@ -1,129 +1,96 @@
+// import './App.css';
+// import { Route, Routes } from 'react-router-dom';
+// import { Header } from './components/Header/Header';
+// import { Footer } from './components/Footer/Footer';
+// import Events from './page/Events/Events';
+// import Home from './page/Home/Home';
+// import EventDetail from './components/EventDetail/EventDetail';
+// import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
+// import { useState } from 'react';
+// import LoginPage from './page/Login/Login';
+// import { useSelector } from 'react-redux';
+// import Cash from './page/Cash/Cash';
+
+// function App() {
+//   const [open, setOpen] = useState(false);
+
+//   const toggleDrawer = () => {
+//     setOpen(!open);
+//   };
+//   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
+//   console.log(isLoggedIn);
+//   return (
+//     <div className="app">
+//       {isLoggedIn && (
+//         <NavigationDrawer open={open} toggleDrawer={toggleDrawer} />
+//       )}
+//       <Header toggleDrawer={toggleDrawer} />
+//       <main>
+//         <Routes>
+//           <Route path="/login" element={<LoginPage />} />
+//           <Route path="/" element={<Home />} />
+//           <Route path="/events" element={<Events />} />
+//           <Route path="/event/:id" element={<EventDetail />} />
+//           <Route path="/cash" element={<Cash />} />
+//         </Routes>
+//       </main>
+//       <Footer />
+//     </div>
+//   );
+// }
+
+// export default App;
 import './App.css';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import Events from './page/Events/Events';
 import Home from './page/Home/Home';
 import EventDetail from './components/EventDetail/EventDetail';
 import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LoginPage from './page/Login/Login';
 import { useSelector } from 'react-redux';
 import Cash from './page/Cash/Cash';
 
 function App() {
   const [open, setOpen] = useState(false);
+  const { isLoggedIn, role } = useSelector((state) => state.auth);
+  const navigate = useNavigate(); // Программное перенаправление
 
   const toggleDrawer = () => {
     setOpen(!open);
   };
-  const events = [
-    {
-      id: 1,
-      title: 'Event 1',
-      description: 'Description for Event 1',
-      date: '2024-08-01',
-      time: '18:00',
-      price: 300,
-      image: 'event.jpg',
-    },
-    {
-      id: 2,
-      title: 'Event 2',
-      description: 'Description for Event 2',
-      date: '2024-08-02',
-      time: '19:00',
-      price: 350,
-      image: 'event.jpg',
-    },
-    {
-      id: 3,
-      title: 'Event 3',
-      description: 'Description for Event 3',
-      date: '2024-08-03',
-      time: '20:00',
-      price: 400,
-      image: 'event.jpg',
-    },
-    {
-      id: 4,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 5,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 6,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 7,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 8,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 9,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-    {
-      id: 10,
-      title: 'Event 4',
-      description: 'Description for Event 4',
-      date: '2024-08-22',
-      time: '21:00',
-      price: 450,
-      image: 'event.jpg',
-    },
-  ];
-  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
-  console.log(isLoggedIn);
+
+  // Программное перенаправление продавца на кассу при логине
+  useEffect(() => {
+    if (role === 'seller' && isLoggedIn) {
+      navigate('/cash');
+    }
+  }, [role, isLoggedIn, navigate]);
+
   return (
     <div className="app">
-      {isLoggedIn && (
+      {isLoggedIn && role !== 'seller' && (
         <NavigationDrawer open={open} toggleDrawer={toggleDrawer} />
       )}
       <Header toggleDrawer={toggleDrawer} />
       <main>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Home />} />
+
+          {/* Доступ на Home только для админа */}
+          <Route
+            path="/"
+            element={role === 'admin' ? <Home /> : <Navigate to="/events" />}
+          />
+
+          {/* Общие маршруты для админа и менеджера */}
           <Route path="/events" element={<Events />} />
           <Route path="/event/:id" element={<EventDetail />} />
-          <Route path="/cash" element={<Cash events={events} />} />
+
+          {/* Только для роли seller */}
+          <Route path="/cash" element={<Cash />} />
         </Routes>
       </main>
       <Footer />
