@@ -17,8 +17,9 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   const [time, setTime] = useState('');
   const [price, setPrice] = useState('');
   const [place, setPlace] = useState('');
-  const [address, setAddress] = useState(''); // Новое поле
+  const [address, setAddress] = useState('');
   const [image, setImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null); // Для предварительного просмотра
 
   const handleCreate = async () => {
     if (
@@ -45,7 +46,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         address,
       };
 
-      console.log('Отправляемые данные:', eventData); // Логирование данных
+      console.log('Отправляемые данные:', eventData);
 
       const eventResponse = await axios.post(
         'http://localhost:3300/events',
@@ -60,7 +61,6 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
       const eventId = eventResponse.data._id;
 
-      // Обработка изображения
       if (image) {
         const formData = new FormData();
         formData.append('poster', image);
@@ -77,6 +77,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         );
       }
       onEventCreated();
+      onClear();
       onClose();
     } catch (error) {
       console.error(
@@ -87,9 +88,23 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   };
 
   const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setPreviewImage(URL.createObjectURL(file)); // Создаем URL для предварительного просмотра
+    }
   };
-
+  const onClear = () => {
+    setDescription('');
+    setDate('');
+    setTime('');
+    setPrice('');
+    setPlace('');
+    setAddress('');
+    setImage('');
+    setPreviewImage('');
+    setTitle('');
+  };
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Створити подію</DialogTitle>
@@ -164,6 +179,19 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               <input type="file" hidden onChange={handleImageChange} />
             </Button>
           </Grid>
+          {previewImage && (
+            <Grid item xs={12}>
+              <img
+                src={previewImage}
+                alt="Preview"
+                style={{
+                  width: '150px',
+                  height: '150px',
+                  objectFit: 'contain',
+                }}
+              />
+            </Grid>
+          )}
         </Grid>
       </DialogContent>
       <DialogActions>

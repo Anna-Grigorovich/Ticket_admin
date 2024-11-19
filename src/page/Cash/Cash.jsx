@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
+import { format } from 'date-fns';
+import uk from 'date-fns/locale/uk';
 
 const Cash = () => {
   const [events, setEvents] = useState([]);
@@ -44,16 +46,21 @@ const Cash = () => {
   };
 
   const checkTicket = async () => {
-    console.log(`Проверка билета для события: ${selectedEvent}, штрих-код: ${barcode}`);
-  
+    console.log(
+      `Проверка билета для события: ${selectedEvent}, штрих-код: ${barcode}`,
+    );
+
     try {
       const token = localStorage.getItem('token'); // Предположим, что вы храните токен в localStorage
-  
-      const response = await axios.get(`http://localhost:3300/tickets/${selectedEvent}/${barcode}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Добавляем заголовок с токеном
+
+      const response = await axios.get(
+        `http://localhost:3300/tickets/${selectedEvent}/${barcode}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Добавляем заголовок с токеном
+          },
         },
-      });
+      );
       setScanResult('valid'); // Если билет найден, устанавливаем статус
     } catch (error) {
       console.error('Ошибка при проверке билета:', error);
@@ -74,7 +81,6 @@ const Cash = () => {
       }
     }
   };
-
   return (
     <Container maxWidth="sm">
       <Grid container spacing={3} sx={{ mt: 3 }}>
@@ -94,11 +100,24 @@ const Cash = () => {
               }}
             >
               {events.length > 0 ? (
-                events.map((event) => (
-                  <MenuItem key={event._id} value={event._id}>
-                    {`${event.title} - ${event.date}`}
-                  </MenuItem>
-                ))
+                events.map((event) => {
+                  const eventDate = new Date(event.date);
+
+                  // Форматируем дату и время
+                  const formattedDateTime = format(
+                    eventDate,
+                    'd MMMM yyyy, EEE. HH:mm',
+                    {
+                      locale: uk,
+                    },
+                  );
+
+                  return (
+                    <MenuItem key={event._id} value={event._id}>
+                      {`${event.title} - ${formattedDateTime}`}
+                    </MenuItem>
+                  );
+                })
               ) : (
                 <MenuItem disabled>Нет доступных событий</MenuItem>
               )}
@@ -137,7 +156,7 @@ const Cash = () => {
                   ? 'red'
                   : 'grey',
               textAlign: 'center',
-              height: '50px',
+              height: '300px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -147,9 +166,9 @@ const Cash = () => {
               {scanResult === 'valid'
                 ? 'Прохід дозволено'
                 : scanResult === 'wrongEvent'
-                ? 'Билет не для этого события'
+                ? 'Квиток не для цієї події'
                 : scanResult === 'alreadyScanned'
-                ? 'Квиток уже отсканирован'
+                ? 'Квиток вже відскановано'
                 : scanResult === 'notFound'
                 ? 'Квиток не знайдено'
                 : 'Результат сканування відобразиться тут'}

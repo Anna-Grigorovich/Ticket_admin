@@ -20,7 +20,8 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditEventModal from '../EditEventModal/EditEventModal'; // Подключение EditEventModal
-
+import { format } from 'date-fns';
+import { uk } from 'date-fns/locale'; 
 const EventsTable = ({ events, onEventUpdated }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -123,7 +124,7 @@ const EventsTable = ({ events, onEventUpdated }) => {
               .map((event) => (
                 <TableRow key={event._id}>
                   <TableCell>
-                    {event.date} {event.time}
+                  {format(new Date(event.date), 'd MMMM yyyy', { locale: uk })}
                   </TableCell>
                   <TableCell>{event.title}</TableCell>
                   <TableCell>{event.sell_count}</TableCell>
