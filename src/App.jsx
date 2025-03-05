@@ -46,7 +46,7 @@ import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import Events from './page/Events/Events';
 import Home from './page/Home/Home';
-import EventDetail from './components/EventDetail/EventDetail';
+// import EventDetail from './components/EventDetail/EventDetail';
 import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
 import { useState, useEffect } from 'react';
 import LoginPage from './page/Login/Login';
@@ -87,7 +87,7 @@ function App() {
 
           {/* Общие маршруты для админа и менеджера */}
           <Route path="/events" element={<Events />} />
-          <Route path="/event/:id" element={<EventDetail />} />
+          {/* <Route path="/event/:id" element={<EventDetail />} /> */}
 
           {/* Только для роли seller */}
           <Route path="/cash" element={<Cash />} />

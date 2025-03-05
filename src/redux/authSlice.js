@@ -16,10 +16,13 @@ export const logInUser = createAsyncThunk(
   'auth/logInUser',
   async ({ login, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('http://localhost:3300/auth/login', {
-        login,
-        password,
-      });
+      const response = await axios.post(
+        'https://back.toptickets.com.ua/auth/login',
+        {
+          login,
+          password,
+        },
+      );
       console.log(response);
       return { token: response.data.access, login, role: response.data.role }; // Предполагаем, что сервер возвращает { token: 'your-token' }
     } catch (error) {

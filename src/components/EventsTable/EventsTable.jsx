@@ -21,7 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditEventModal from '../EditEventModal/EditEventModal'; // Подключение EditEventModal
 import { format } from 'date-fns';
-import { uk } from 'date-fns/locale'; 
+import { uk } from 'date-fns/locale';
 const EventsTable = ({ events, onEventUpdated }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -56,7 +56,7 @@ const EventsTable = ({ events, onEventUpdated }) => {
       console.log('Сохраняем изменения для события с ID:', updatedEvent._id); // Лог ID
 
       await axios.patch(
-        `http://localhost:3300/events/${updatedEvent._id}`, // Используем _id
+        `https://back.toptickets.com.ua/events/${updatedEvent._id}`, // Используем _id
         updatedEvent,
         {
           headers: {
@@ -86,11 +86,14 @@ const EventsTable = ({ events, onEventUpdated }) => {
   const confirmDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:3300/events/${eventToDelete}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.delete(
+        `https://back.toptickets.com.ua/events/${eventToDelete}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       setOpenDeleteDialog(false);
       setEventToDelete(null);
       onEventUpdated();
@@ -124,7 +127,9 @@ const EventsTable = ({ events, onEventUpdated }) => {
               .map((event) => (
                 <TableRow key={event._id}>
                   <TableCell>
-                  {format(new Date(event.date), 'd MMMM yyyy', { locale: uk })}
+                    {format(new Date(event.date), 'd MMMM yyyy', {
+                      locale: uk,
+                    })}
                   </TableCell>
                   <TableCell>{event.title}</TableCell>
                   <TableCell>{event.sell_count}</TableCell>

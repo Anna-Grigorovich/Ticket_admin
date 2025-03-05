@@ -49,7 +49,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
       console.log('Отправляемые данные:', eventData);
 
       const eventResponse = await axios.post(
-        'http://localhost:3300/events',
+        'https://back.toptickets.com.ua/events',
         eventData,
         {
           headers: {
@@ -66,7 +66,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         formData.append('poster', image);
 
         await axios.post(
-          `http://localhost:3300/events/upload/${eventId}`,
+          `https://back.toptickets.com.ua/events/upload/${eventId}`,
           formData,
           {
             headers: {

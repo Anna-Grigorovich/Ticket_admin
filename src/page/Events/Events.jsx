@@ -14,11 +14,14 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:3300/events', {
-        params: {
-          limit: 1000, // Устанавливаем большой лимит
+      const response = await axios.get(
+        'https://back.toptickets.com.ua/events',
+        {
+          params: {
+            limit: 1000, // Устанавливаем большой лимит
+          },
         },
-      });
+      );
       setEvents(response.data.events);
     } catch (error) {
       console.error('Ошибка при получении ивентов:', error);

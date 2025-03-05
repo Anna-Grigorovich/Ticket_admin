@@ -27,7 +27,9 @@ const Cash = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get('http://localhost:3300/events'); // Получение событий с бэкенда
+        const response = await axios.get(
+          'https://back.toptickets.com.ua/events',
+        ); // Получение событий с бэкенда
         setEvents(response.data.events); // Обновление состояния с полученными событиями
       } catch (error) {
         console.error('Ошибка при получении ивентов:', error);
@@ -54,7 +56,7 @@ const Cash = () => {
       const token = localStorage.getItem('token'); // Предположим, что вы храните токен в localStorage
 
       const response = await axios.get(
-        `http://localhost:3300/tickets/${selectedEvent}/${barcode}`,
+        `https://back.toptickets.com.ua/tickets/${selectedEvent}/${barcode}`,
         {
           headers: {
             Authorization: `Bearer ${token}`, // Добавляем заголовок с токеном

@@ -168,7 +168,9 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
       setAddress(eventData.address);
 
       // Загрузим текущий постер для предварительного просмотра
-      setPreviewImage(`http://localhost:3300/images/${eventData._id}.jpg`);
+      setPreviewImage(
+        `https://back.toptickets.com.ua/images/${eventData._id}.jpg`,
+      );
     }
   }, [eventData]);
 
@@ -202,7 +204,7 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
       try {
         const token = localStorage.getItem('token');
         await axios.post(
-          `http://localhost:3300/events/upload/${eventData._id}`,
+          `https://back.toptickets.com.ua/events/upload/${eventData._id}`,
           formData,
           {
             headers: {

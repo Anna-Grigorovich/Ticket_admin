@@ -40,7 +40,7 @@ const Home = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3300/users', {
+      const response = await axios.get('https://back.toptickets.com.ua/users', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
