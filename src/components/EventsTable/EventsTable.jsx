@@ -16,19 +16,26 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
+  Chip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import EditEventModal from '../EditEventModal/EditEventModal'; // Подключение EditEventModal
+import BlockIcon from '@mui/icons-material/Block';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import EditEventModal from '../EditEventModal/EditEventModal';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
+
 const EventsTable = ({ events, onEventUpdated }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null); // Для редактирования ивента
-  const [openEditModal, setOpenEditModal] = useState(false); // Открытие/закрытие модалки редактирования
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [openCloseDialog, setOpenCloseDialog] = useState(false);
+  const [eventToClose, setEventToClose] = useState(null);
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -40,9 +47,9 @@ const EventsTable = ({ events, onEventUpdated }) => {
   };
 
   const handleEdit = (eventId) => {
-    const event = events.find((e) => e._id === eventId); // Используем _id вместо id
+    const event = events.find((e) => e._id === eventId || e.id === eventId);
     if (event) {
-      setSelectedEvent(event); // Сохраняем все данные события, включая _id
+      setSelectedEvent(event);
       setOpenEditModal(true);
     } else {
       console.error('Событие не найдено');
@@ -52,21 +59,15 @@ const EventsTable = ({ events, onEventUpdated }) => {
   const handleSaveEdit = async (updatedEvent) => {
     try {
       const token = localStorage.getItem('token');
+      const eventId = updatedEvent._id || updatedEvent.id;
 
-      console.log('Сохраняем изменения для события с ID:', updatedEvent._id); // Лог ID
-
-      await axios.patch(
-        `https://back.toptickets.com.ua/events/${updatedEvent._id}`, // Используем _id
-        updatedEvent,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      await axios.patch(`${API_URL}/events-bo/${eventId}`, updatedEvent, {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
-      onEventUpdated(); // Вызов функции после редактирования события
-
+      onEventUpdated();
       setOpenEditModal(false);
     } catch (error) {
       console.error(
@@ -76,36 +77,96 @@ const EventsTable = ({ events, onEventUpdated }) => {
     }
   };
 
-  // Открытие диалогового окна для удаления
   const handleDelete = (eventId) => {
     setOpenDeleteDialog(true);
     setEventToDelete(eventId);
   };
 
-  // Подтверждение удаления
   const confirmDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(
-        `https://back.toptickets.com.ua/events/${eventToDelete}`,
+      const eventId = eventToDelete;
+
+      await axios.delete(`${API_URL}/events-bo/${eventId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setOpenDeleteDialog(false);
+      setEventToDelete(null);
+      onEventUpdated();
+    } catch (error) {
+      console.error(
+        'Ошибка при удалении ивента:',
+        error.response?.data || error,
+      );
+    }
+  };
+
+  const handleOpenCloseDialog = (eventId, isSellClosed) => {
+    if (isSellClosed) {
+      return;
+    }
+    setEventToClose(eventId);
+    setOpenCloseDialog(true);
+  };
+
+  const handleCloseSales = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const eventId = eventToClose;
+
+      await axios.post(
+        `${API_URL}/events-bo/close`,
+        { eventId: eventId },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         },
       );
-      setOpenDeleteDialog(false);
-      setEventToDelete(null);
+
+      setOpenCloseDialog(false);
+      setEventToClose(null);
       onEventUpdated();
     } catch (error) {
-      console.error('Ошибка при удалении ивента:', error);
+      console.error(
+        'Ошибка при закрытии продажи:',
+        error.response?.data || error,
+      );
     }
   };
 
-  // Отмена удаления
   const cancelDelete = () => {
     setOpenDeleteDialog(false);
     setEventToDelete(null);
+  };
+
+  const cancelCloseDialog = () => {
+    setOpenCloseDialog(false);
+    setEventToClose(null);
+  };
+
+  // Функция для правильного отображения цены
+  const calculateTotalAmount = (event) => {
+    // Проверяем разные форматы данных, которые могут быть у ивента
+    let sellCount = event.sell_count || 0;
+    let price = 0;
+
+    // Определяем цену в зависимости от структуры данных
+    if (event.price) {
+      price = Number(event.price);
+    } else if (event.prices && event.prices.length > 0) {
+      price = Number(event.prices[0].price || 0);
+    }
+
+    // Проверяем, что оба значения - числа и возвращаем результат с форматированием
+    if (isNaN(sellCount) || isNaN(price)) {
+      return '0 грн';
+    }
+
+    return `${(sellCount * price).toLocaleString('uk-UA')} грн`;
   };
 
   return (
@@ -118,32 +179,70 @@ const EventsTable = ({ events, onEventUpdated }) => {
               <TableCell>Назва</TableCell>
               <TableCell>Продано квитків</TableCell>
               <TableCell>Сума</TableCell>
+              <TableCell>Продаж квитків</TableCell>
               <TableCell>Дії</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {events
+              .slice()
+              .sort((a, b) => new Date(b.date) - new Date(a.date))
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((event) => (
-                <TableRow key={event._id}>
-                  <TableCell>
-                    {format(new Date(event.date), 'd MMMM yyyy', {
-                      locale: uk,
-                    })}
-                  </TableCell>
-                  <TableCell>{event.title}</TableCell>
-                  <TableCell>{event.sell_count}</TableCell>
-                  <TableCell>{event.sell_count * event.price} грн</TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => handleEdit(event._id)}>
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(event._id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              .map((event) => {
+                const eventId = event._id || event.id;
+                const isSellClosed = event.sellEnded || false;
+
+                return (
+                  <TableRow key={eventId}>
+                    <TableCell>
+                      {format(new Date(event.date), 'd MMMM yyyy', {
+                        locale: uk,
+                      })}
+                    </TableCell>
+                    <TableCell>{event.title}</TableCell>
+                    <TableCell>{event.sell_count || 0}</TableCell>
+                    <TableCell>{calculateTotalAmount(event)}</TableCell>
+                    <TableCell>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <Chip
+                          icon={
+                            isSellClosed ? <BlockIcon /> : <ShoppingCartIcon />
+                          }
+                          label={
+                            isSellClosed ? 'Продаж закритий' : 'Йде продаж'
+                          }
+                          color={isSellClosed ? 'error' : 'success'}
+                          variant="outlined"
+                          style={{ marginRight: '8px' }}
+                        />
+                        <IconButton
+                          onClick={() =>
+                            handleOpenCloseDialog(eventId, isSellClosed)
+                          }
+                          disabled={isSellClosed}
+                          title={
+                            isSellClosed
+                              ? 'Продаж уже закритий'
+                              : 'Закрити продаж квитків'
+                          }
+                        >
+                          <BlockIcon
+                            color={isSellClosed ? 'disabled' : 'primary'}
+                          />
+                        </IconButton>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEdit(eventId)}>
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDelete(eventId)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -162,8 +261,8 @@ const EventsTable = ({ events, onEventUpdated }) => {
         <EditEventModal
           open={openEditModal}
           onClose={() => setOpenEditModal(false)}
-          eventData={selectedEvent} // Передаем данные текущего ивента для редактирования
-          onSave={handleSaveEdit} // Функция сохранения после редактирования
+          eventData={selectedEvent}
+          onSave={handleSaveEdit}
         />
       )}
 
@@ -180,6 +279,23 @@ const EventsTable = ({ events, onEventUpdated }) => {
           <Button onClick={cancelDelete}>Скасувати</Button>
           <Button onClick={confirmDelete} color="error">
             Видалити
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Диалог закрытия продажи */}
+      <Dialog open={openCloseDialog} onClose={cancelCloseDialog}>
+        <DialogTitle>Закрити продаж квитків?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Ви впевнені, що хочете закрити продаж квитків для цього івенту?
+            Після закриття продажу квитків відновити його буде неможливо.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={cancelCloseDialog}>Скасувати</Button>
+          <Button onClick={handleCloseSales} color="error">
+            Закрити продаж
           </Button>
         </DialogActions>
       </Dialog>

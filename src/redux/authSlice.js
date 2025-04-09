@@ -17,7 +17,8 @@ export const logInUser = createAsyncThunk(
   async ({ login, password }, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        'https://back.toptickets.com.ua/auth/login',
+        // 'https://back.toptickets.com.ua/auth/login',
+        `${process.env.REACT_APP_API_URL}/auth/login`,
         {
           login,
           password,

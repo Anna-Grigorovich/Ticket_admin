@@ -10,16 +10,19 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [price, setPrice] = useState('');
+  const [available, setAvailable] = useState(100);
   const [place, setPlace] = useState('');
   const [address, setAddress] = useState('');
   const [image, setImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null); // Для предварительного просмотра
+  const [previewImage, setPreviewImage] = useState(null);
 
   const handleCreate = async () => {
     if (
@@ -37,19 +40,31 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
     try {
       const token = localStorage.getItem('token');
+      const dateStart = new Date(`${date}T${time}`).getTime();
+      const dateEnd = dateStart + 2 * 60 * 60 * 1000;
+
       const eventData = {
         title,
         description,
-        date: new Date(`${date}T${time}`).getTime(),
-        price: Number(price),
+        date: dateStart,
+        dateEnd,
         place,
         address,
+        prices: [
+          {
+            price: Number(price),
+            available: Number(available),
+            place,
+            description: 'Місця в фан-зоні',
+          },
+        ],
+        show: true,
+        ended: false,
+        sellEnded: false,
       };
 
-      console.log('Отправляемые данные:', eventData);
-
       const eventResponse = await axios.post(
-        'https://back.toptickets.com.ua/events',
+        `${API_URL}/events-bo`,
         eventData,
         {
           headers: {
@@ -59,26 +74,25 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         },
       );
 
-      const eventId = eventResponse.data._id;
+      if (eventResponse.status === 201) {
+        const eventId = eventResponse.data._id;
 
-      if (image) {
-        const formData = new FormData();
-        formData.append('poster', image);
+        if (image) {
+          const formData = new FormData();
+          formData.append('poster', image);
 
-        await axios.post(
-          `https://back.toptickets.com.ua/events/upload/${eventId}`,
-          formData,
-          {
+          await axios.post(`${API_URL}/events-bo/upload/${eventId}`, formData, {
             headers: {
               Authorization: `Bearer ${token}`,
               'Content-Type': 'multipart/form-data',
             },
-          },
-        );
+          });
+        }
+
+        onEventCreated();
+        onClear();
+        onClose();
       }
-      onEventCreated();
-      onClear();
-      onClose();
     } catch (error) {
       console.error(
         'Ошибка при создании ивента:',
@@ -91,20 +105,23 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
-      setPreviewImage(URL.createObjectURL(file)); // Создаем URL для предварительного просмотра
+      setPreviewImage(URL.createObjectURL(file));
     }
   };
+
   const onClear = () => {
+    setTitle('');
     setDescription('');
     setDate('');
     setTime('');
     setPrice('');
+    setAvailable(100);
     setPlace('');
     setAddress('');
-    setImage('');
-    setPreviewImage('');
-    setTitle('');
+    setImage(null);
+    setPreviewImage(null);
   };
+
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Створити подію</DialogTitle>
@@ -112,65 +129,72 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <TextField
-              fullWidth
               label="Назва події"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              fullWidth
             />
           </Grid>
           <Grid item xs={12}>
             <TextField
-              fullWidth
               label="Опис"
               multiline
-              rows={5}
+              rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              fullWidth
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
-              fullWidth
               label="Дата"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              fullWidth
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
-              fullWidth
               label="Час"
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              fullWidth
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
-              fullWidth
               label="Ціна"
               type="number"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
+              fullWidth
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
+              label="Кількість квитків"
+              type="number"
+              value={available}
+              onChange={(e) => setAvailable(e.target.value)}
               fullWidth
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
               label="Місце проведення"
               value={place}
               onChange={(e) => setPlace(e.target.value)}
+              fullWidth
             />
           </Grid>
           <Grid item xs={6}>
             <TextField
-              fullWidth
               label="Адреса"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              fullWidth
             />
           </Grid>
           <Grid item xs={12}>

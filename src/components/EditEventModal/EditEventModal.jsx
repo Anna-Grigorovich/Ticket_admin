@@ -1,134 +1,3 @@
-// import React, { useState, useEffect } from 'react';
-// import {
-//   Button,
-//   Dialog,
-//   DialogActions,
-//   DialogContent,
-//   DialogTitle,
-//   TextField,
-//   Grid,
-// } from '@mui/material';
-
-// const EditEventModal = ({ open, onClose, eventData, onSave }) => {
-//   const [title, setTitle] = useState('');
-//   const [description, setDescription] = useState('');
-//   const [date, setDate] = useState('');
-//   const [time, setTime] = useState('');
-//   const [price, setPrice] = useState('');
-//   const [place, setPlace] = useState('');
-//   const [address, setAddress] = useState('');
-
-//   // Когда модальное окно открывается, мы загружаем данные события для редактирования
-//   useEffect(() => {
-//     if (eventData) {
-//       setTitle(eventData.title);
-//       setDescription(eventData.description);
-//       setDate(new Date(eventData.date).toISOString().split('T')[0]); // Конвертация timestamp в формат даты
-//       setTime(
-//         new Date(eventData.date)
-//           .toLocaleTimeString('en-US', { hour12: false })
-//           .substring(0, 5),
-//       );
-//       setPrice(eventData.price);
-//       setPlace(eventData.place);
-//       setAddress(eventData.address);
-//     }
-//   }, [eventData]);
-
-//   const handleSave = () => {
-//     const updatedEvent = {
-//       ...eventData, // Сохраняем _id и другие неизмененные поля
-//       title,
-//       description,
-//       date: new Date(`${date}T${time}`).getTime(), // Преобразуем дату и время в timestamp
-//       price: Number(price),
-//       place,
-//       address,
-//     };
-//     onSave(updatedEvent); // Передаем обновленные данные события
-//   };
-
-//   return (
-//     <Dialog open={open} onClose={onClose}>
-//       <DialogTitle>Редактировать подію</DialogTitle>
-//       <DialogContent>
-//         <Grid container spacing={2}>
-//           <Grid item xs={12}>
-//             <TextField
-//               fullWidth
-//               label="Назва події"
-//               value={title}
-//               onChange={(e) => setTitle(e.target.value)}
-//             />
-//           </Grid>
-//           <Grid item xs={12}>
-//             <TextField
-//               fullWidth
-//               label="Опис"
-//               multiline
-//               rows={5}
-//               value={description}
-//               onChange={(e) => setDescription(e.target.value)}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               fullWidth
-//               label="Дата"
-//               type="date"
-//               value={date}
-//               onChange={(e) => setDate(e.target.value)}
-//               InputLabelProps={{ shrink: true }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               fullWidth
-//               label="Час"
-//               type="time"
-//               value={time}
-//               onChange={(e) => setTime(e.target.value)}
-//               InputLabelProps={{ shrink: true }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               fullWidth
-//               label="Ціна"
-//               type="number"
-//               value={price}
-//               onChange={(e) => setPrice(e.target.value)}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               fullWidth
-//               label="Місце проведення"
-//               value={place}
-//               onChange={(e) => setPlace(e.target.value)}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               fullWidth
-//               label="Адреса"
-//               value={address}
-//               onChange={(e) => setAddress(e.target.value)}
-//             />
-//           </Grid>
-//         </Grid>
-//       </DialogContent>
-//       <DialogActions>
-//         <Button onClick={onClose}>Скасувати</Button>
-//         <Button onClick={handleSave} variant="contained">
-//           Зберегти
-//         </Button>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// };
-
-// export default EditEventModal;
 import React, { useState, useEffect } from 'react';
 import {
   Button,
@@ -140,6 +9,8 @@ import {
   Grid,
 } from '@mui/material';
 import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_API_URL;
 
 const EditEventModal = ({ open, onClose, eventData, onSave }) => {
   const [title, setTitle] = useState('');
@@ -155,22 +26,24 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
   // Загружаем данные события при открытии модалки
   useEffect(() => {
     if (eventData) {
+      console.log('Получены данные события:', eventData);
+
       setTitle(eventData.title);
       setDescription(eventData.description);
-      setDate(new Date(eventData.date).toISOString().split('T')[0]); // Преобразуем timestamp в дату
+      setDate(new Date(eventData.date).toISOString().split('T')[0]);
       setTime(
         new Date(eventData.date)
           .toLocaleTimeString('en-US', { hour12: false })
           .substring(0, 5),
       );
-      setPrice(eventData.price);
+      setPrice(eventData.prices?.[0]?.price || '');
       setPlace(eventData.place);
       setAddress(eventData.address);
 
-      // Загрузим текущий постер для предварительного просмотра
-      setPreviewImage(
-        `https://back.toptickets.com.ua/images/${eventData._id}.jpg`,
-      );
+      // Проверяем наличие афиши по ID события
+      const imageUrl = `${API_URL}/images/${eventData._id}.jpg`;
+      setPreviewImage(imageUrl);
+      console.log('URL афиши:', imageUrl);
     }
   }, [eventData]);
 
@@ -179,43 +52,89 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
     if (file) {
       setImage(file);
       setPreviewImage(URL.createObjectURL(file));
+      console.log('Загружено новое изображение:', file.name);
     }
   };
 
   const handleSave = async () => {
-    const updatedEvent = {
-      ...eventData, // Сохраняем _id и другие неизмененные поля
-      title,
-      description,
-      date: new Date(`${date}T${time}`).getTime(),
-      price: Number(price),
-      place,
-      address,
-    };
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Токен для авторизации:', token);
 
-    // Передаем обновленные данные
-    await onSave(updatedEvent);
-
-    // Если было загружено новое изображение, отправляем его на сервер
-    if (image) {
-      const formData = new FormData();
-      formData.append('poster', image);
-
-      try {
-        const token = localStorage.getItem('token');
-        await axios.post(
-          `https://back.toptickets.com.ua/events/upload/${eventData._id}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'multipart/form-data',
-            },
-          },
-        );
-      } catch (error) {
-        console.error('Ошибка загрузки изображения:', error);
+      // Проверяем наличие ID события
+      const eventId = eventData._id || eventData.id;
+      if (!eventId) {
+        console.error('Ошибка: ID события не найден');
+        return;
       }
+      console.log('ID события:', eventId);
+
+      const updatedEvent = {
+        ...eventData,
+        title,
+        description,
+        date: new Date(`${date}T${time}`).getTime(),
+        prices: [
+          {
+            price: Number(price),
+            available: eventData.prices?.[0]?.available || 100,
+            place: place,
+            description: 'Місця в фан-зоні',
+          },
+        ],
+        place,
+        address,
+        show: true,
+        ended: false,
+        sellEnded: false,
+      };
+
+      console.log('Отправляем обновленные данные:', updatedEvent);
+
+      // Отправка обновленных данных на сервер
+      const response = await axios.patch(
+        `${API_URL}/events-bo/${eventId}`,
+        updatedEvent,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      console.log('Успешное обновление события:', response.data);
+
+      // Если есть новое изображение, загружаем его отдельно
+      if (image) {
+        const formData = new FormData();
+        formData.append('poster', image);
+
+        try {
+          const imageResponse = await axios.post(
+            `${API_URL}/events-bo/upload/${eventId}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+              },
+            },
+          );
+          console.log('Изображение успешно загружено:', imageResponse.data);
+        } catch (error) {
+          console.error(
+            'Ошибка при загрузке изображения:',
+            error.response?.data || error,
+          );
+        }
+      }
+
+      onSave(updatedEvent);
+      onClose();
+    } catch (error) {
+      console.error(
+        'Ошибка при сохранении изменений:',
+        error.response?.data || error,
+      );
     }
   };
 

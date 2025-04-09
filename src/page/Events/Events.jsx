@@ -5,6 +5,7 @@ import { Button, Container } from '@mui/material';
 import EventsTable from '../../components/EventsTable/EventsTable';
 import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 import c from './Events.module.css';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -14,14 +15,11 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(
-        'https://back.toptickets.com.ua/events',
-        {
-          params: {
-            limit: 1000, // Устанавливаем большой лимит
-          },
+      const response = await axios.get(`${API_URL}/events`, {
+        params: {
+          limit: 1000, // Устанавливаем большой лимит
         },
-      );
+      });
       setEvents(response.data.events);
     } catch (error) {
       console.error('Ошибка при получении ивентов:', error);

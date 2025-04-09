@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 // import { logIn } from '../../redux/authSlice';
 import { logInUser } from '../../redux/authSlice'; // Импортируем асинхронный экшен
 
@@ -9,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 export const LoginForm = () => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isFetchingCurrentUser, error } = useSelector((state) => state.auth);
@@ -44,7 +48,7 @@ export const LoginForm = () => {
             value={login}
             onChange={(e) => setLogin(e.target.value)}
           />
-          <TextField
+          {/* <TextField
             margin="normal"
             required
             fullWidth
@@ -55,6 +59,30 @@ export const LoginForm = () => {
             // autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+          /> */}
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Пароль"
+            type={showPassword ? 'text' : 'password'}
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                    aria-label="toggle password visibility"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           <Button
             type="submit"
