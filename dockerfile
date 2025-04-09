@@ -1,6 +1,8 @@
 FROM node:20.2 as builder
 WORKDIR /usr/src/app
 
+LABEL com.centurylinklabs.watchtower.enable="true"
+
 COPY package*.json ./
 
 RUN npm install --force
