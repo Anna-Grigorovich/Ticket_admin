@@ -39,11 +39,13 @@ import {
   PointOfSale as SellerIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 
-const Home = () => {
+const Users = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('');
   const [users, setUsers] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -243,12 +245,23 @@ const Home = () => {
                 />
                 <TextField
                   label="Пароль"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   fullWidth
                   variant="outlined"
+                  InputProps={{
+                    endAdornment: (
+                      <IconButton
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    ),
+                  }}
                 />
+
                 <FormControl fullWidth variant="outlined">
                   <InputLabel id="role-label">Роль</InputLabel>
                   <Select
@@ -452,4 +465,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Users;

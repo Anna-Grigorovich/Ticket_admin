@@ -3,13 +3,14 @@ import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import Events from './page/Events/Events';
-import Home from './page/Home/Home';
+import Dashboard from './page/Dashboard/Dashboard'; // Добавляем Dashboard
 // import EventDetail from './components/EventDetail/EventDetail';
 import NavigationDrawer from './components/NavigationDrawer/NavigationDrawer';
 import { useState, useEffect } from 'react';
 import LoginPage from './page/Login/Login';
 import { useSelector } from 'react-redux';
 import Cash from './page/Cash/Cash';
+import Users from './page/Home/Users';
 
 function App() {
   const [open, setOpen] = useState(false);
@@ -37,10 +38,26 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Доступ на Home только для админа */}
+          {/* Главная страница - Dashboard для админа и менеджера */}
           <Route
             path="/"
-            element={role === 'admin' ? <Home /> : <Navigate to="/events" />}
+            element={
+              isLoggedIn ? (
+                role === 'seller' ? (
+                  <Navigate to="/cash" />
+                ) : (
+                  <Dashboard />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
+          {/* Страница Home для создания пользователей (только для админа) */}
+          <Route
+            path="/users"
+            element={role === 'admin' ? <Users /> : <Navigate to="/" />}
           />
 
           {/* Общие маршруты для админа и менеджера */}

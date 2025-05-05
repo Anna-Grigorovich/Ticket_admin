@@ -1,180 +1,186 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
   Button,
   Grid,
   Box,
   Typography,
+  Paper,
+  CircularProgress,
 } from '@mui/material';
-import axios from 'axios';
-import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
-import { format } from 'date-fns';
-import uk from 'date-fns/locale/uk';
+import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+
 const API_URL = process.env.REACT_APP_API_URL;
 
 const Cash = () => {
-  const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState('');
   const [barcode, setBarcode] = useState('');
   const [scanResult, setScanResult] = useState(null);
+  const [ticketData, setTicketData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  useLogOutRedirect();
-
-  useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/events`); // Получение событий с бэкенда
-        setEvents(response.data.events); // Обновление состояния с полученными событиями
-      } catch (error) {
-        console.error('Ошибка при получении ивентов:', error);
-      }
-    };
-
-    fetchEvents(); // Вызов функции для получения событий
-  }, []);
-
-  const handleEventChange = (event) => {
-    setSelectedEvent(event.target.value);
-  };
-
-  const handleBarcodeChange = (event) => {
-    setBarcode(event.target.value);
-  };
-
-  const checkTicket = async () => {
-    console.log(
-      `Проверка билета для события: ${selectedEvent}, штрих-код: ${barcode}`,
-    );
-
-    try {
-      const token = localStorage.getItem('token'); // Предположим, что вы храните токен в localStorage
-
-      const response = await axios.get(
-        `${API_URL}/tickets/${selectedEvent}/${barcode}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Добавляем заголовок с токеном
-          },
-        },
-      );
-      setScanResult('valid'); // Если билет найден, устанавливаем статус
-    } catch (error) {
-      console.error('Ошибка при проверке билета:', error);
-
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 404) {
-          setScanResult('notFound'); // Билет не найден
-        } else if (status === 400) {
-          setScanResult('wrongEvent'); // Билет не соответствует событию
-        } else if (status === 409) {
-          setScanResult('alreadyScanned'); // Билет уже отсканирован
-        } else if (status === 401) {
-          setScanResult('unauthorized'); // Ошибка аутентификации
-        }
-      } else {
-        setScanResult('error'); // Общая ошибка
-      }
+  const getResultColor = (status) => {
+    switch (status) {
+      case 'valid':
+        return 'green';
+      case 'alreadyScanned':
+        return 'orange';
+      case 'wrongEvent':
+        return 'blue';
+      case 'notFound':
+      case 'unauthorized':
+      case 'error':
+        return 'red';
+      default:
+        return 'grey';
     }
   };
+
+  const getResultIcon = (status) => {
+    const props = { size: 48, color: 'white' };
+    switch (status) {
+      case 'valid':
+        return <CheckCircle {...props} />;
+      case 'alreadyScanned':
+        return <Clock {...props} />;
+      case 'wrongEvent':
+        return <AlertTriangle {...props} />;
+      default:
+        return <XCircle {...props} />;
+    }
+  };
+
+  const getResultText = (status) => {
+    switch (status) {
+      case 'valid':
+        return 'Прохід дозволено';
+      case 'alreadyScanned':
+        return 'Квиток вже відскановано';
+      case 'wrongEvent':
+        return 'Квиток не для цієї події';
+      case 'notFound':
+        return 'Квиток не знайдено';
+      case 'unauthorized':
+        return 'Помилка авторизації';
+      case 'error':
+        return 'Помилка сканування';
+      default:
+        return 'Результат сканування відобразиться тут';
+    }
+  };
+
+  const handleScan = async () => {
+    if (!barcode) {
+      setError('Введіть штрих-код');
+      return;
+    }
+
+    setError(null);
+    setScanResult(null);
+    setTicketData(null);
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/tickets/scan/${barcode}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      setScanResult('valid');
+      setTicketData(data);
+      setBarcode('');
+    } catch (err) {
+      const msg = err.message || '';
+      if (msg.includes('404')) setScanResult('notFound');
+      else if (msg.includes('409')) setScanResult('alreadyScanned');
+      else if (msg.includes('400')) setScanResult('wrongEvent');
+      else if (msg.includes('401')) {
+        setScanResult('unauthorized');
+        setError('Помилка авторизації. Увійдіть знову.');
+      } else {
+        setScanResult('error');
+        setError('Невідома помилка при скануванні');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Container maxWidth="sm">
       <Grid container spacing={3} sx={{ mt: 3 }}>
-        <Grid item xs={12}>
-          <FormControl fullWidth>
-            <InputLabel>Оберіть подію</InputLabel>
-            <Select
-              value={selectedEvent}
-              onChange={handleEventChange}
-              MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 200, // Максимальная высота выпадающего списка
-                    overflowY: 'auto', // Прокрутка, если элементы не помещаются
-                  },
-                },
-              }}
-            >
-              {events.length > 0 ? (
-                events.map((event) => {
-                  const eventDate = new Date(event.date);
-
-                  // Форматируем дату и время
-                  const formattedDateTime = format(
-                    eventDate,
-                    'd MMMM yyyy, EEE. HH:mm',
-                    {
-                      locale: uk,
-                    },
-                  );
-
-                  return (
-                    <MenuItem key={event._id} value={event._id}>
-                      {`${event.title} - ${formattedDateTime}`}
-                    </MenuItem>
-                  );
-                })
-              ) : (
-                <MenuItem disabled>Нет доступных событий</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-        </Grid>
-
         <Grid item xs={12}>
           <TextField
             fullWidth
             label="Введіть штрих-код"
             value={barcode}
-            onChange={handleBarcodeChange}
+            onChange={(e) => setBarcode(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleScan()}
           />
         </Grid>
 
+        {error && (
+          <Grid item xs={12}>
+            <Typography color="error">{error}</Typography>
+          </Grid>
+        )}
+
         <Grid item xs={12}>
-          <Button variant="contained" fullWidth onClick={checkTicket}>
-            Сканувати квиток
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={handleScan}
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Сканувати квиток'
+            )}
           </Button>
         </Grid>
 
         <Grid item xs={12}>
-          <Box
+          <Paper
+            elevation={3}
             sx={{
-              p: 2,
-              borderRadius: 1,
-              backgroundColor:
-                scanResult === 'valid'
-                  ? 'green'
-                  : scanResult === 'wrongEvent'
-                  ? 'blue'
-                  : scanResult === 'alreadyScanned'
-                  ? 'orange'
-                  : scanResult === 'notFound'
-                  ? 'red'
-                  : 'grey',
-              textAlign: 'center',
-              height: '300px',
+              p: 4,
+              backgroundColor: getResultColor(scanResult),
+              color: 'white',
+              minHeight: 200,
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Typography variant="h6" sx={{ color: 'white' }}>
-              {scanResult === 'valid'
-                ? 'Прохід дозволено'
-                : scanResult === 'wrongEvent'
-                ? 'Квиток не для цієї події'
-                : scanResult === 'alreadyScanned'
-                ? 'Квиток вже відскановано'
-                : scanResult === 'notFound'
-                ? 'Квиток не знайдено'
-                : 'Результат сканування відобразиться тут'}
+            {getResultIcon(scanResult)}
+            <Typography variant="h6" sx={{ mt: 2, textAlign: 'center' }}>
+              {getResultText(scanResult)}
             </Typography>
-          </Box>
+
+            {scanResult === 'valid' && ticketData && (
+              <Box mt={2} textAlign="center">
+                <Typography>Подія: {ticketData.event?.title}</Typography>
+                <Typography>Email: {ticketData.mail}</Typography>
+                <Typography>
+                  Місце: {ticketData?.event?.prices?.[0]?.description || '—'}
+                </Typography>
+                <Typography>Ціна: {ticketData.price} грн</Typography>
+              </Box>
+            )}
+          </Paper>
         </Grid>
       </Grid>
     </Container>

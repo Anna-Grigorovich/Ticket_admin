@@ -35,19 +35,31 @@ const NavigationDrawer = ({ open, toggleDrawer }) => {
     >
       <Toolbar />
       <List>
-        <ListItem button onClick={() => handleListItemClick('/')}>
+        <ListItem
+          button
+          onClick={() => handleListItemClick('/users')}
+          sx={{ cursor: 'pointer' }} // Добавляем курсор pointer
+        >
           <ListItemIcon>
             <PeopleIcon />
           </ListItemIcon>
           <ListItemText primary="Користувач" />
         </ListItem>
-        <ListItem button onClick={() => handleListItemClick('/events')}>
+        <ListItem
+          button
+          onClick={() => handleListItemClick('/events')}
+          sx={{ cursor: 'pointer' }} // Добавляем курсор pointer
+        >
           <ListItemIcon>
             <EventIcon />
           </ListItemIcon>
           <ListItemText primary="Події" />
         </ListItem>
-        <ListItem button onClick={() => handleListItemClick('/cash')}>
+        <ListItem
+          button
+          onClick={() => handleListItemClick('/cash')}
+          sx={{ cursor: 'pointer' }} // Добавляем курсор pointer
+        >
           <ListItemIcon>
             <ShoppingCartIcon />
           </ListItemIcon>

@@ -15,9 +15,13 @@ const Events = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get(`${API_URL}/events`, {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/events-bo`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         params: {
-          limit: 1000, // Устанавливаем большой лимит
+          limit: 1000,
         },
       });
       setEvents(response.data.events);
