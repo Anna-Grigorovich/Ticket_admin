@@ -1,285 +1,3 @@
-// import React, { useState } from 'react';
-// import {
-//   Button,
-//   Dialog,
-//   DialogActions,
-//   DialogContent,
-//   DialogTitle,
-//   TextField,
-//   Grid,
-//   Checkbox,
-//   FormControlLabel,
-// } from '@mui/material';
-// import axios from 'axios';
-
-// const API_URL = process.env.REACT_APP_API_URL;
-
-// const CreateEventModal = ({ open, onClose, onEventCreated }) => {
-//   const [title, setTitle] = useState('');
-//   const [description, setDescription] = useState('');
-//   const [date, setDate] = useState('');
-//   const [time, setTime] = useState('');
-//   const [endDate, setEndDate] = useState('');
-//   const [endTime, setEndTime] = useState('');
-//   const [price, setPrice] = useState('');
-//   const [available, setAvailable] = useState(100);
-//   const [place, setPlace] = useState('');
-//   const [address, setAddress] = useState('');
-//   const [show, setShow] = useState(true);
-//   const [image, setImage] = useState(null);
-//   const [previewImage, setPreviewImage] = useState(null);
-
-//   const handleCreate = async () => {
-//     if (
-//       !date ||
-//       !time ||
-//       !endDate ||
-//       !endTime ||
-//       !title ||
-//       !description ||
-//       !price ||
-//       !place ||
-//       !address
-//     ) {
-//       console.error('One or more required fields are missing');
-//       return;
-//     }
-
-//     try {
-//       const token = localStorage.getItem('token');
-//       const dateStart = new Date(`${date}T${time}`).getTime();
-//       const dateEnd = new Date(`${endDate}T${endTime}`).getTime();
-
-//       const eventData = {
-//         title,
-//         description,
-//         date: dateStart,
-//         dateEnd,
-//         place,
-//         address,
-//         prices: [
-//           {
-//             price: Number(price),
-//             available: Number(available),
-//             place,
-//             description: 'Місця в фан-зоні',
-//           },
-//         ],
-//         show,
-//         ended: false,
-//         sellEnded: false,
-//       };
-
-//       const eventResponse = await axios.post(
-//         `${API_URL}/events-bo`,
-//         eventData,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${token}`,
-//             'Content-Type': 'application/json',
-//           },
-//         },
-//       );
-
-//       if (eventResponse.status === 201) {
-//         const eventId = eventResponse.data._id;
-
-//         if (image) {
-//           const formData = new FormData();
-//           formData.append('poster', image);
-
-//           await axios.post(`${API_URL}/events-bo/upload/${eventId}`, formData, {
-//             headers: {
-//               Authorization: `Bearer ${token}`,
-//               'Content-Type': 'multipart/form-data',
-//             },
-//           });
-//         }
-
-//         onEventCreated();
-//         onClear();
-//         onClose();
-//       }
-//     } catch (error) {
-//       console.error(
-//         'Ошибка при создании ивента:',
-//         error.response?.data || error,
-//       );
-//     }
-//   };
-
-//   const handleImageChange = (e) => {
-//     const file = e.target.files[0];
-//     if (file) {
-//       setImage(file);
-//       setPreviewImage(URL.createObjectURL(file));
-//     }
-//   };
-
-//   const onClear = () => {
-//     setTitle('');
-//     setDescription('');
-//     setDate('');
-//     setTime('');
-//     setEndDate('');
-//     setEndTime('');
-//     setPrice('');
-//     setAvailable(100);
-//     setPlace('');
-//     setAddress('');
-//     setShow(true);
-//     setImage(null);
-//     setPreviewImage(null);
-//   };
-
-//   return (
-//     <Dialog open={open} onClose={onClose}>
-//       <DialogTitle>Створити подію</DialogTitle>
-//       <DialogContent>
-//         <Grid container spacing={2}>
-//           <Grid item xs={12}>
-//             <TextField
-//               label="Назва події"
-//               value={title}
-//               onChange={(e) => setTitle(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={12}>
-//             <TextField
-//               label="Опис"
-//               multiline
-//               rows={4}
-//               value={description}
-//               onChange={(e) => setDescription(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Дата початку"
-//               type="date"
-//               value={date}
-//               onChange={(e) => setDate(e.target.value)}
-//               fullWidth
-//               InputLabelProps={{
-//                 shrink: true,
-//               }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Час початку"
-//               type="time"
-//               value={time}
-//               onChange={(e) => setTime(e.target.value)}
-//               fullWidth
-//               InputLabelProps={{
-//                 shrink: true,
-//               }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Дата завершення"
-//               type="date"
-//               value={endDate}
-//               onChange={(e) => setEndDate(e.target.value)}
-//               fullWidth
-//               InputLabelProps={{
-//                 shrink: true,
-//               }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Час завершення"
-//               type="time"
-//               value={endTime}
-//               onChange={(e) => setEndTime(e.target.value)}
-//               fullWidth
-//               InputLabelProps={{
-//                 shrink: true,
-//               }}
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Ціна"
-//               type="number"
-//               value={price}
-//               onChange={(e) => setPrice(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Кількість квитків"
-//               type="number"
-//               value={available}
-//               onChange={(e) => setAvailable(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Місце проведення"
-//               value={place}
-//               onChange={(e) => setPlace(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={6}>
-//             <TextField
-//               label="Адреса"
-//               value={address}
-//               onChange={(e) => setAddress(e.target.value)}
-//               fullWidth
-//             />
-//           </Grid>
-//           <Grid item xs={12}>
-//             <FormControlLabel
-//               control={
-//                 <Checkbox
-//                   checked={show}
-//                   onChange={(e) => setShow(e.target.checked)}
-//                 />
-//               }
-//               label="Показувати"
-//             />
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Button variant="contained" component="label" fullWidth>
-//               Додати афішу
-//               <input type="file" hidden onChange={handleImageChange} />
-//             </Button>
-//           </Grid>
-//           {previewImage && (
-//             <Grid item xs={12}>
-//               <img
-//                 src={previewImage}
-//                 alt="Preview"
-//                 style={{
-//                   width: '150px',
-//                   height: '150px',
-//                   objectFit: 'contain',
-//                 }}
-//               />
-//             </Grid>
-//           )}
-//         </Grid>
-//       </DialogContent>
-//       <DialogActions>
-//         <Button onClick={onClose}>Закрити</Button>
-//         <Button onClick={handleCreate} variant="contained">
-//           Створити
-//         </Button>
-//       </DialogActions>
-//     </Dialog>
-//   );
-// };
-
-// export default CreateEventModal;
 import React, { useState } from 'react';
 import {
   Button,
@@ -314,8 +32,8 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   const [show, setShow] = useState(true);
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [errors, setErrors] = useState({});
 
-  // Initial price option
   const [priceOptions, setPriceOptions] = useState([
     {
       price: '',
@@ -325,29 +43,35 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     },
   ]);
 
+  const validate = () => {
+    const newErrors = {};
+    if (!title.trim()) newErrors.title = 'Назва обов’язкова';
+    if (!description.trim()) newErrors.description = 'Опис обов’язковий';
+    if (!date) newErrors.date = 'Дата початку обов’язкова';
+    if (!time) newErrors.time = 'Час початку обов’язковий';
+    if (!endDate) newErrors.endDate = 'Дата завершення обов’язкова';
+    if (!endTime) newErrors.endTime = 'Час завершення обов’язковий';
+    if (!place.trim()) newErrors.place = 'Місце проведення обов’язкове';
+    if (!address.trim()) newErrors.address = 'Адреса обов’язкова';
+
+    priceOptions.forEach((option, index) => {
+      if (!option.price) {
+        newErrors[`price-${index}`] = 'Ціна обов’язкова';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleCreate = async () => {
-    if (
-      !date ||
-      !time ||
-      !endDate ||
-      !endTime ||
-      !title ||
-      !description ||
-      !place ||
-      !address ||
-      priceOptions.length === 0 ||
-      priceOptions.some((option) => !option.price)
-    ) {
-      console.error('One or more required fields are missing');
-      return;
-    }
+    if (!validate()) return;
 
     try {
       const token = localStorage.getItem('token');
       const dateStart = new Date(`${date}T${time}`).getTime();
       const dateEnd = new Date(`${endDate}T${endTime}`).getTime();
 
-      // Format price options for API
       const formattedPriceOptions = priceOptions.map((option) => ({
         price: Number(option.price),
         available: Number(option.available),
@@ -426,6 +150,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     setShow(true);
     setImage(null);
     setPreviewImage(null);
+    setErrors({});
     setPriceOptions([
       {
         price: '',
@@ -436,7 +161,6 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     ]);
   };
 
-  // Add new price option
   const addPriceOption = () => {
     setPriceOptions([
       ...priceOptions,
@@ -449,7 +173,6 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     ]);
   };
 
-  // Remove price option
   const removePriceOption = (index) => {
     if (priceOptions.length > 1) {
       const updatedOptions = [...priceOptions];
@@ -458,7 +181,6 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     }
   };
 
-  // Update price option field
   const updatePriceOption = (index, field, value) => {
     const updatedOptions = [...priceOptions];
     updatedOptions[index][field] = value;
@@ -477,6 +199,9 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setTitle(e.target.value)}
               fullWidth
               margin="normal"
+              required
+              error={!!errors.title}
+              helperText={errors.title}
             />
           </Grid>
           <Grid item xs={12}>
@@ -488,6 +213,9 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setDescription(e.target.value)}
               fullWidth
               margin="normal"
+              required
+              error={!!errors.description}
+              helperText={errors.description}
             />
           </Grid>
           <Grid item xs={6}>
@@ -498,9 +226,10 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setDate(e.target.value)}
               fullWidth
               margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
+              required
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.date}
+              helperText={errors.date}
             />
           </Grid>
           <Grid item xs={6}>
@@ -511,9 +240,10 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setTime(e.target.value)}
               fullWidth
               margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
+              required
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.time}
+              helperText={errors.time}
             />
           </Grid>
           <Grid item xs={6}>
@@ -524,9 +254,10 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setEndDate(e.target.value)}
               fullWidth
               margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
+              required
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.endDate}
+              helperText={errors.endDate}
             />
           </Grid>
           <Grid item xs={6}>
@@ -537,9 +268,10 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setEndTime(e.target.value)}
               fullWidth
               margin="normal"
-              InputLabelProps={{
-                shrink: true,
-              }}
+              required
+              InputLabelProps={{ shrink: true }}
+              error={!!errors.endTime}
+              helperText={errors.endTime}
             />
           </Grid>
           <Grid item xs={6}>
@@ -549,6 +281,9 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setPlace(e.target.value)}
               fullWidth
               margin="normal"
+              required
+              error={!!errors.place}
+              helperText={errors.place}
             />
           </Grid>
           <Grid item xs={6}>
@@ -558,6 +293,9 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               onChange={(e) => setAddress(e.target.value)}
               fullWidth
               margin="normal"
+              required
+              error={!!errors.address}
+              helperText={errors.address}
             />
           </Grid>
 
@@ -589,6 +327,8 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
                       }
                       fullWidth
                       required
+                      error={!!errors[`price-${index}`]}
+                      helperText={errors[`price-${index}`]}
                     />
                   </Grid>
                   <Grid item xs={6} md={3}>

@@ -10,6 +10,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { useLogOutRedirect } from '../../hooks/useLogOutRedirect';
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -19,6 +20,8 @@ const Cash = () => {
   const [ticketData, setTicketData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useLogOutRedirect();
 
   const getResultColor = (status) => {
     switch (status) {

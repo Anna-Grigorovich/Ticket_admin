@@ -10,6 +10,8 @@ import {
 import PeopleIcon from '@mui/icons-material/People';
 import EventIcon from '@mui/icons-material/Event';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+
 import { useNavigate } from 'react-router-dom';
 
 const drawerWidth = 240;
@@ -35,6 +37,16 @@ const NavigationDrawer = ({ open, toggleDrawer }) => {
     >
       <Toolbar />
       <List>
+        <ListItem
+          button
+          onClick={() => handleListItemClick('/')}
+          sx={{ cursor: 'pointer' }}
+        >
+          <ListItemIcon>
+            <DashboardIcon />
+          </ListItemIcon>
+          <ListItemText primary="Головна сторінка" />
+        </ListItem>
         <ListItem
           button
           onClick={() => handleListItemClick('/users')}
