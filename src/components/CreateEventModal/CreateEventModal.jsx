@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { CircularProgress } from '@mui/material';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -33,6 +34,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const [priceOptions, setPriceOptions] = useState([
     {
@@ -66,6 +68,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
   const handleCreate = async () => {
     if (!validate()) return;
+    setLoading(true); // 🟦 Показать спиннер
 
     try {
       const token = localStorage.getItem('token');
@@ -127,6 +130,8 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         'Помилка при створенні події:',
         error.response?.data || error,
       );
+    } finally {
+      setLoading(false); // 🟦 Скрыть спиннер
     }
   };
 
@@ -421,8 +426,15 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Закрити</Button>
-        <Button onClick={handleCreate} variant="contained">
+        {/* <Button onClick={handleCreate} variant="contained">
           Створити
+        </Button> */}
+        <Button onClick={handleCreate} variant="contained" disabled={loading}>
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            'Створити'
+          )}
         </Button>
       </DialogActions>
     </Dialog>

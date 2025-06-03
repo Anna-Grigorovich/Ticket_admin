@@ -57,6 +57,12 @@ const Users = () => {
     message: '',
     severity: 'success',
   });
+  const [errors, setErrors] = useState({
+    username: false,
+    password: false,
+    role: false,
+  });
+
   const API_URL = process.env.REACT_APP_API_URL;
 
   useLogOutRedirect();
@@ -129,7 +135,14 @@ const Users = () => {
 
   // Function to register a new user
   const handleRegister = async () => {
-    if (!username || !password || !role) {
+    const isValid = username && password && role;
+    setErrors({
+      username: !username,
+      password: !password,
+      role: !role,
+    });
+
+    if (!isValid) {
       showSnackbar('Будь ласка, заповніть всі поля', 'warning');
       return;
     }
@@ -137,7 +150,7 @@ const Users = () => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const newUser = { login: username, password: password, role: role };
+      const newUser = { login: username, password, role };
 
       await axios.post(`${API_URL}/users`, newUser, {
         headers: {
@@ -145,10 +158,10 @@ const Users = () => {
         },
       });
 
-      // Clear form and update user list
       setUsername('');
       setPassword('');
       setRole('');
+      setErrors({ username: false, password: false, role: false });
       await fetchUsers();
       showSnackbar('Користувача успішно зареєстровано', 'success');
     } catch (error) {
@@ -240,6 +253,7 @@ const Users = () => {
                   label="Ім'я користувача"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  helperText={errors.username && "Це поле обов'язкове"}
                   fullWidth
                   variant="outlined"
                 />
@@ -250,6 +264,7 @@ const Users = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   fullWidth
                   variant="outlined"
+                  helperText={errors.password && "Це поле обов'язкове"}
                   InputProps={{
                     endAdornment: (
                       <IconButton
@@ -262,7 +277,7 @@ const Users = () => {
                   }}
                 />
 
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth variant="outlined" error={errors.role}>
                   <InputLabel id="role-label">Роль</InputLabel>
                   <Select
                     labelId="role-label"

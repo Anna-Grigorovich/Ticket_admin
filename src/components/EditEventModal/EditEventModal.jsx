@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import { CircularProgress } from '@mui/material';
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -41,6 +42,7 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
     },
   ]);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (eventData) {
@@ -152,6 +154,7 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
 
   const handleSave = async () => {
     if (!validate()) return;
+    setLoading(true); // ⏳ Показываем лоадер
 
     try {
       const token = localStorage.getItem('token');
@@ -203,6 +206,8 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
         'Помилка при збереженні змін:',
         error.response?.data || error,
       );
+    } finally {
+      setLoading(false); // ✅ Убираем лоадер
     }
   };
 
@@ -440,8 +445,15 @@ const EditEventModal = ({ open, onClose, eventData, onSave }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Скасувати</Button>
-        <Button onClick={handleSave} variant="contained">
+        {/* <Button onClick={handleSave} variant="contained">
           Зберегти
+        </Button> */}
+        <Button onClick={handleSave} variant="contained" disabled={loading}>
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            'Зберегти'
+          )}
         </Button>
       </DialogActions>
     </Dialog>
