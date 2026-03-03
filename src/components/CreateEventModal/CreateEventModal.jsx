@@ -23,6 +23,7 @@ const API_URL = process.env.REACT_APP_API_URL;
 
 const CreateEventModal = ({ open, onClose, onEventCreated }) => {
   const [title, setTitle] = useState('');
+  const [url, setUrl] = useState(''); // Новое поле для URL
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -45,20 +46,54 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
     },
   ]);
 
+  // Функция для генерации URL из названия
+  const generateUrlFromTitle = (title) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9а-яё\s]/g, '') // Убираем спецсимволы
+      .replace(/\s+/g, '-') // Заменяем пробелы на дефисы
+      .replace(/-+/g, '-') // Убираем множественные дефисы
+      .trim()
+      .replace(/^-|-$/g, ''); // Убираем дефисы в начале и конце
+  };
+
+  // Автоматическая генерация URL при вводе названия
+  const handleTitleChange = (e) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+
+    // Автоматически генерируем URL, если он еще не был изменен пользователем
+    if (!url || url === generateUrlFromTitle(title)) {
+      setUrl(generateUrlFromTitle(newTitle));
+    }
+  };
+
+  // Валидация URL (только латиница, цифры и дефисы)
+  const validateUrl = (urlValue) => {
+    const urlRegex = /^[a-zA-Z0-9-]+$/;
+    return urlRegex.test(urlValue);
+  };
+
   const validate = () => {
     const newErrors = {};
-    if (!title.trim()) newErrors.title = 'Назва обов’язкова';
-    if (!description.trim()) newErrors.description = 'Опис обов’язковий';
-    if (!date) newErrors.date = 'Дата початку обов’язкова';
-    if (!time) newErrors.time = 'Час початку обов’язковий';
-    if (!endDate) newErrors.endDate = 'Дата завершення обов’язкова';
-    if (!endTime) newErrors.endTime = 'Час завершення обов’язковий';
-    if (!place.trim()) newErrors.place = 'Місце проведення обов’язкове';
-    if (!address.trim()) newErrors.address = 'Адреса обов’язкова';
+    if (!title.trim()) newErrors.title = `Назва обов'язкова`;
+    if (!url.trim()) {
+      newErrors.url = `URL обов'язковий`;
+    } else if (!validateUrl(url)) {
+      newErrors.url =
+        'URL може містити тільки латинські літери, цифри та дефіси';
+    }
+    if (!description.trim()) newErrors.description = `Опис обов'язковий`;
+    if (!date) newErrors.date = `Дата початку обов'язкова`;
+    if (!time) newErrors.time = `Час початку обов'язковий`;
+    if (!endDate) newErrors.endDate = `Дата завершення обов'язкова`;
+    if (!endTime) newErrors.endTime = `Час завершення обов'язковий`;
+    if (!place.trim()) newErrors.place = `Місце проведення обов'язкове`;
+    if (!address.trim()) newErrors.address = `Адреса обов'язкова`;
 
     priceOptions.forEach((option, index) => {
       if (!option.price) {
-        newErrors[`price-${index}`] = 'Ціна обов’язкова';
+        newErrors[`price-${index}`] = `Ціна обов'язкова`;
       }
     });
 
@@ -68,7 +103,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
   const handleCreate = async () => {
     if (!validate()) return;
-    setLoading(true); // 🟦 Показать спиннер
+    setLoading(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -84,6 +119,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
       const eventData = {
         title,
+        url, // Добавляем URL в данные события
         description,
         date: dateStart,
         dateEnd,
@@ -130,8 +166,15 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
         'Помилка при створенні події:',
         error.response?.data || error,
       );
+      // Можно добавить обработку ошибки дублирования URL
+      if (
+        error.response?.status === 400 &&
+        error.response?.data?.message?.includes('url')
+      ) {
+        setErrors({ url: 'Цей URL вже використовується' });
+      }
     } finally {
-      setLoading(false); // 🟦 Скрыть спиннер
+      setLoading(false);
     }
   };
 
@@ -145,6 +188,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
 
   const onClear = () => {
     setTitle('');
+    setUrl('');
     setDescription('');
     setDate('');
     setTime('');
@@ -201,12 +245,28 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
             <TextField
               label="Назва події"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={handleTitleChange}
               fullWidth
               margin="normal"
               required
               error={!!errors.title}
               helperText={errors.title}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="URL для посилання"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              fullWidth
+              margin="normal"
+              required
+              error={!!errors.url}
+              helperText={
+                errors.url ||
+                'Використовуйте тільки латинські літери, цифри та дефіси'
+              }
+              placeholder="music-festival-2024"
             />
           </Grid>
           <Grid item xs={12}>
@@ -247,6 +307,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               margin="normal"
               required
               InputLabelProps={{ shrink: true }}
+              slotProps={{ input: { step: 600 } }}
               error={!!errors.time}
               helperText={errors.time}
             />
@@ -261,6 +322,7 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
               margin="normal"
               required
               InputLabelProps={{ shrink: true }}
+              slotProps={{ input: { step: 600 } }}
               error={!!errors.endDate}
               helperText={errors.endDate}
             />
@@ -426,9 +488,6 @@ const CreateEventModal = ({ open, onClose, onEventCreated }) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Закрити</Button>
-        {/* <Button onClick={handleCreate} variant="contained">
-          Створити
-        </Button> */}
         <Button onClick={handleCreate} variant="contained" disabled={loading}>
           {loading ? (
             <CircularProgress size={24} color="inherit" />

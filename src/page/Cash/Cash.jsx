@@ -117,6 +117,7 @@ const Cash = () => {
       }
     } finally {
       setLoading(false);
+      setBarcode('');
     }
   };
 
@@ -130,6 +131,8 @@ const Cash = () => {
             value={barcode}
             onChange={(e) => setBarcode(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleScan()}
+            autoComplete="off"
+            autoCorrect="off"
           />
         </Grid>
 
